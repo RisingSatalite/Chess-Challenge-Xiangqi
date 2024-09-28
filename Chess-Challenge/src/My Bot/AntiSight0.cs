@@ -1,14 +1,8 @@
-﻿using ChessChallenge.API;
-using System;
-using System.Linq;
-//For attempted troubleshooting
-//using System.Threading.Tasks;
-//using System.Diagnostics;
+﻿using System;
 
-//Bot 1001
-public class EvilBot : IChessBot
+public class AntiSight0
 {
-    //using Bot 603
+    //Make the worst bot here
     private Random random = new Random();
     int[] pieceValues = { 0, 100, 300, 300, 500, 900, 100000 };
     //static Board board;
@@ -23,43 +17,31 @@ public class EvilBot : IChessBot
         allMoves = RandomizeArray(allMoves);
 
         //Make negative incase all moves are come up as negative, so it can play best terrible move
-        int score = -999999999;
+        int score = 999999999;
 
+
+        //I assigned a random move to it incase their is a problem and also, C# hate if move does not have an assigned value
         Move drawMove = allMoves[random.Next(0, allMoves.Length)];
-        //intially assigned an illegal move here and check if that move appear, then decide what to do
         Move bestMove = drawMove;
-        //Move bestMove = allMoves[random.Next(0, allMoves.Length)];
-        //Move drawMove = randomMove
-        /*foreach(Move move in allMoves)
-        {
-            Console.WriteLine(move.ToString);
-        }*/
-        //Attempted to rearrange
-        //allMoves = allMoves.OrderBy(move => MoveTakePower(board, move)).ToArray();
-
-        //return allMoves.FirstOrDefault();
-
-        //bool IsEndgame = Endgame(board);
 
         foreach (Move possibleMoves in allMoves)
         {
-            if (MoveIsCheckmate(board, possibleMoves))
+            if (WillGetMated(board, possibleMoves))
             {
 
                 //Console.WriteLine("Found checkmate");
                 return possibleMoves;
             }
-            //Always ingoring mate seem to make bot worse
-            if (WillGetMated(board, possibleMoves))
+            //Note always ingoring mate seem to make bot worse
+            if (MoveIsCheckmate(board, possibleMoves) || MoveIsForcedMate(board, possibleMoves))
             {
                 //This move lead to defeat should be ingored, if not checkmate
                 //Console.WriteLine("Insta defeat move detected");
                 continue;
             }
-            //Detecting repetitions, lowers draws by 3 move and increases wind rates 
             board.MakeMove(possibleMoves);
-            //I hate draw, this stops draw at all costs, it will make bot lose games, but it is better to win than lose
-            if (board.IsDraw() || (0 == board.GetLegalMoves().Count()))//board.IsRepeatedPosition()
+            //I hate draw, this stops draw at all costs, it will make bot lose games, but it is better if it cause more wins
+            if (board.IsDraw() || (0 == board.GetLegalMoves().Count()))
             {
                 //Console.WriteLine("Do not repeat, stalement or draw");
                 board.UndoMove(possibleMoves);
@@ -67,11 +49,15 @@ public class EvilBot : IChessBot
                 continue;
             }
             board.UndoMove(possibleMoves);
+
+
             int currentScore = (FutureAttackTotal(board, possibleMoves) /*+ MateAble(board, possibleMoves)*/ + MoveTakePower(board, possibleMoves) + WinEndGame(board, possibleMoves) - MaxDangerDetection(board, possibleMoves) - FutureDefenceTotal(board, possibleMoves));
+
+
             //Depending on result, might want to run more tests, 
             //Console.WriteLine("Move score is :");
             //Console.WriteLine(currentScore.ToString());
-            if (currentScore > score)
+            if (currentScore < score)
             {
                 //Console.WriteLine("Best move so far");
                 //My bot is better but does not know how to mate endgame
@@ -83,18 +69,12 @@ public class EvilBot : IChessBot
                 return possibleMoves;
             }*/
         }
-        if (score == -999999999)
+        if (score == 999999999)
         {
             return drawMove;
         }
         return bestMove;
     }
-    /*public int CustomComparison(Move a, Move b, Board board)
-    {
-        int placeA = MoveTakePower(board, a);
-        int placeB = MoveTakePower(board, b);
-        return placeA.CompareTo(placeB);
-    }*/
 
     private bool MoveIsCheckmate(Board board, Move move)
     {
@@ -103,8 +83,45 @@ public class EvilBot : IChessBot
         board.UndoMove(move);
         return isMate;
     }
+    private bool MoveIsForcedMate(Board board, Move move)
+    {
+        board.MakeMove(move);
+        Move[] counterMoves = board.GetLegalMoves();
+        bool allMovesToCheckMate = false;
+        foreach (Move move1 in counterMoves)
+        {
+            board.MakeMove(move1);
+            Move[] counterMoves2 = board.GetLegalMoves();
+            bool thisEnemyMoveLoses = false;
+            foreach (Move move2 in counterMoves2)
+            {
+                if (MoveIsCheckmate(board, move2))
+                {
 
-    //Function does not work
+                    thisEnemyMoveLoses = true;
+                    break;
+                }
+            }
+            board.UndoMove(move1);
+            if (thisEnemyMoveLoses)
+            {
+                continue;
+            }
+            else
+            {
+                allMovesToCheckMate = false;
+                break;
+            }
+
+        }
+        board.UndoMove(move);
+        if (allMovesToCheckMate)
+        {
+            return true;
+        }
+        return false;
+    }
+
     private bool WillGetMated(Board board, Move move)
     {
         //board.MakeMove(move);
@@ -129,31 +146,48 @@ public class EvilBot : IChessBot
         return false;
     }
 
-    //Check how to future attackes
-    /*private int FutureAttack(Board board, Move move)
+
+    //If need to resubmit, remove this function
+    private bool MateIn2AgainstEnemy(Board board, Move move)
     {
-        int power = 0;
         board.MakeMove(move);
-        Move[] possibleMoves = board.GetLegalMoves();
-        foreach (Move possibleMove in possibleMoves)
+        Move[] counterMoves = board.GetLegalMoves();
+        bool allMovesToCheckMate = false;
+        foreach (Move move1 in counterMoves)
         {
-            //The s at the end differ for the varibles
-            board.MakeMove(possibleMove);
-            Move[] possibleMoves2 = board.GetLegalMoves();
-            foreach (Move possibleMove2 in possibleMoves2)
+            board.MakeMove(move1);
+            Move[] counterMoves2 = board.GetLegalMoves();
+            bool thisEnemyMoveLoses = false;
+            foreach (Move move2 in counterMoves2)
             {
-                int potential = MoveTakePower(board, possibleMove2);
-                //It is currently run on a per move, best move basis, might be interesting to make it take scores from all runs
-                if (potential > power)
+                if (WillGetMated(board, move2))
                 {
-                    power = potential;
+
+                    thisEnemyMoveLoses = true;
+                    break;
                 }
             }
-            board.UndoMove(possibleMove);
+            board.UndoMove(move1);
+            if (thisEnemyMoveLoses)
+            {
+                continue;
+            }
+            else
+            {
+                allMovesToCheckMate = false;
+                break;
+            }
+
         }
         board.UndoMove(move);
-        return (power / 10);
-    }*/
+        if (allMovesToCheckMate)
+        {
+            return true;
+        }
+        return false;
+    }
+
+    //In next few moves, what pieces may the bot win
     private int FutureAttackTotal(Board board, Move move)
     {
         int power = 0;
@@ -194,7 +228,7 @@ public class EvilBot : IChessBot
         //return (power/(possibleMoves.Length*10));
     }
 
-    //Basic version, create an advance version
+    //In the next few turns, what piece might bot lose
     private int FutureDefenceTotal(Board board, Move move)
     {
         int power = 0;
@@ -223,23 +257,8 @@ public class EvilBot : IChessBot
         }
 
     }
-    //An attempt to check every square on the board to see how many squares are attacked
-    /*public int ControlAttack(Board board, Move move) 
-    {
-        Square[] squareList;
-        int AttackWatch = 0;
-        board.MakeMove(move);
-        foreach(Square square in squareList)
-        {
-            if (SquareIsAttackedByOpponent(square))
-            {
-                AttackWatch++;
-            }
-        }
-        board.UndoMove(move);
-        return AttackWatch;
-    }*/
-    //Randomise list, quite useful for psudeo determinictic
+
+    //Randomise the array, create pesudo determinisitc games, espicailly with low searching
     public Move[] RandomizeArray(Move[] array)
     {
         int n = array.Length;
@@ -254,16 +273,7 @@ public class EvilBot : IChessBot
         return array;
     }
 
-    //Judge an attacked piece value
-    /*public static int MoveTakePower2(Move move)
-    {
-        int[] pieceValues = { 0, 100, 300, 300, 500, 900, 10000 };
 
-        Piece capturedPiece = board.GetPiece(move.TargetSquare);
-        int capturedPieceValue = pieceValues[(int)capturedPiece.PieceType];
-        Console.WriteLine(capturedPieceValue.ToString());
-        return capturedPieceValue;
-    }*/
     public int MoveTakePower(Board board, Move move)
     {
         Piece capturedPiece = board.GetPiece(move.TargetSquare);
@@ -271,10 +281,10 @@ public class EvilBot : IChessBot
         //Console.WriteLine(capturedPieceValue.ToString());
         return capturedPieceValue;
     }
+
     public int MaxDangerDetection(Board board, Move move)
     {
         int capturedPieceValue = 0;
-        int[] pieceValues = { 0, 100, 300, 300, 500, 900, 100000 };
         board.MakeMove(move);
         Move[] counterMoves = board.GetLegalMoves();
         foreach (Move ifMove in counterMoves)
@@ -292,85 +302,8 @@ public class EvilBot : IChessBot
         //Console.WriteLine(capturedPieceValue.ToString());
         return capturedPieceValue;
     }
-    /*public int MateAble(Board board, Move move)
-    {
-        int mateAttack = 0;
-        board.MakeMove(move);
-        Move[] counterMoves = board.GetLegalMoves();
-        foreach (Move potentialMove in counterMoves)
-        {
-            //Each move avilable to enemy
-            //Check every move avilable to bot and increase the changes of some moves 
-            board.MakeMove(potentialMove);
-            Move[] attackMoves = board.GetLegalMoves();
-            foreach (Move ifMove in attackMoves)
-            {
 
-                if (MoveIsCheckmate(board, ifMove))
-                {
-                    mateAttack += 30;
-                }
-
-                //Extra layer of search, does not mean it better, take time and make profromance worse
-                //This search enemies move that might mate*/
-    /*board.MakeMove(ifMove);
-    Move[] attackMoves2 = board.GetLegalMoves();
-    foreach (Move ifMove2 in attackMoves2)
-    {
-        if (MoveIsCheckmate(board, ifMove2))
-        {
-            mateAttack -= 1;
-        }
-    }
-    board.UndoMove(ifMove);*/
-    /*
-            }
-            board.UndoMove(potentialMove);
-        }
-        board.UndoMove(move);
-        return mateAttack;
-    }*/
-    /*FUnctionality added to Mateable instead, tho slow and work improperly
-    public int getMated(Board board, Move move) 
-    {
-        int Danger = 0;
-        board.MakeMove(move);
-        Move[] attackMoves = board.GetLegalMoves();
-        foreach (Move ifMove in attackMoves)
-        {
-
-        }
-        board.UndoMove(move);
-        return Danger;
-    }*/
-    //It is currently very bad at endgame, add this search if it only enemy king left
-    /*public bool Endgame(Board board)
-    {
-        //Check if only black or white king and a few piece remains, if so, it does deep search
-        int recorderBlack;
-        int recorderWhite;
-        PieceList[] piece = board.GetAllPieceLists();
-        foreach(PieceList pieces in piece)
-        {
-            Piece type = pieces.TypeOfPieceInList;
-            bool WhiteOrNot = pieces.IsWhitePieceList;
-            if (WhiteOrNot)
-            {
-                recorderWhite++;
-            }
-            else
-            {
-                recorderBlack++;
-            }
-        }
-        if(recorderWhite<3 ||recorderBlack < 3)
-        {
-            //This is the endgame
-            return true;
-        }
-        //This is not the endgame
-        return false;
-    }*/
+    //More percicion for endgames
     public int WinEndGame(Board board, Move move)
     {
         if (board.GetAllPieceLists().Length > 8)
@@ -459,39 +392,4 @@ public class EvilBot : IChessBot
         board.UndoMove(move);
         return isMoveGood;
     }
-
-
-
-    //This function forces bot to always promo to queen become queen is always better than a rook bishop and knight
-    /*public int QueenPromotion(Board board, Move move)
-    {
-        PieceList[] piece = board.GetAllPieceLists();
-        bool goWhite = board.IsWhiteToMove;
-        board.MakeMove(move);
-        PieceList[] piece2 = board.GetAllPieceLists();
-        board.UndoMove(move);
-        int queenCount = 0;
-        foreach (PieceList pieces1 in piece)
-        {
-            if ((pieces1.TypeOfPieceInList == PieceType.Queen) && (pieces1.IsWhitePieceList == goWhite))
-            {
-                queenCount--;
-            }
-        }
-        foreach (PieceList pieces2 in piece2)
-        {
-            //piece2
-            if ((pieces2.TypeOfPieceInList == PieceType.Queen) && (pieces2.IsWhitePieceList == goWhite))
-            {
-                queenCount++;
-            }
-        }
-        //Return a higher number when promotioning to queen
-        Console.WriteLine("Number of queens detected");
-        if (queenCount != 1)
-        {
-            Console.WriteLine(queenCount.ToString());
-        }
-        return queenCount;
-    }*/
 }

@@ -6,7 +6,7 @@ using System.Linq;
 //using System.Diagnostics;
 
 //Bot 1001
-public class EvilBot : IChessBot
+public class Bot1004 : IChessBot
 {
     //using Bot 603
     private Random random = new Random();
@@ -67,7 +67,11 @@ public class EvilBot : IChessBot
                 continue;
             }
             board.UndoMove(possibleMoves);
+
+
             int currentScore = (FutureAttackTotal(board, possibleMoves) /*+ MateAble(board, possibleMoves)*/ + MoveTakePower(board, possibleMoves) + WinEndGame(board, possibleMoves) - MaxDangerDetection(board, possibleMoves) - FutureDefenceTotal(board, possibleMoves));
+
+
             //Depending on result, might want to run more tests, 
             //Console.WriteLine("Move score is :");
             //Console.WriteLine(currentScore.ToString());
@@ -102,6 +106,37 @@ public class EvilBot : IChessBot
         bool isMate = board.IsInCheckmate();
         board.UndoMove(move);
         return isMate;
+    }
+
+    private bool WillGetMatedLater(Board board, Move move)
+    {
+        Console.WriteLine("Checking mates");
+        board.MakeMove(move);
+        Move[] allMoves = board.GetLegalMoves();
+        foreach (Move possibleMove in allMoves)
+        {
+            Console.WriteLine("Checking mates2");
+            board.MakeMove(possibleMove);
+            //board.MakeMove(possibleMove);
+            Move[] allMoves2 = board.GetLegalMoves();
+            foreach (Move possibleMove2 in allMoves2)
+            {
+                Console.WriteLine("Checking mates3");
+                if (!WillGetMated(board, possibleMove2))
+                {
+                    board.UndoMove(possibleMove);
+                    board.UndoMove(move);
+                    return false;
+                }
+                Console.WriteLine("Checking mates4");
+            }
+            //board.MakeMove(possibleMove);
+            board.UndoMove(possibleMove);
+            Console.WriteLine("Checking mates5");
+        }
+        board.UndoMove(move);
+        Console.WriteLine("Checking mates6");
+        return true;
     }
 
     //Function does not work
@@ -343,34 +378,7 @@ public class EvilBot : IChessBot
         board.UndoMove(move);
         return Danger;
     }*/
-    //It is currently very bad at endgame, add this search if it only enemy king left
-    /*public bool Endgame(Board board)
-    {
-        //Check if only black or white king and a few piece remains, if so, it does deep search
-        int recorderBlack;
-        int recorderWhite;
-        PieceList[] piece = board.GetAllPieceLists();
-        foreach(PieceList pieces in piece)
-        {
-            Piece type = pieces.TypeOfPieceInList;
-            bool WhiteOrNot = pieces.IsWhitePieceList;
-            if (WhiteOrNot)
-            {
-                recorderWhite++;
-            }
-            else
-            {
-                recorderBlack++;
-            }
-        }
-        if(recorderWhite<3 ||recorderBlack < 3)
-        {
-            //This is the endgame
-            return true;
-        }
-        //This is not the endgame
-        return false;
-    }*/
+
     public int WinEndGame(Board board, Move move)
     {
         if (board.GetAllPieceLists().Length > 8)

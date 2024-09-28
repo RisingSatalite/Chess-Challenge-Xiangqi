@@ -1,12 +1,15 @@
 ﻿using ChessChallenge.API;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System;
 using System.Linq;
+using System.Linq.Expressions;
+using System.Net.Http.Headers;
 //For attempted troubleshooting
 //using System.Threading.Tasks;
 //using System.Diagnostics;
 
-//Bot 1001
-public class EvilBot : IChessBot
+//Is preforming badly aganist evil bot
+public class MyBot1001 : IChessBot
 {
     //using Bot 603
     private Random random = new Random();
@@ -45,7 +48,6 @@ public class EvilBot : IChessBot
         {
             if (MoveIsCheckmate(board, possibleMoves))
             {
-
                 //Console.WriteLine("Found checkmate");
                 return possibleMoves;
             }
@@ -63,17 +65,17 @@ public class EvilBot : IChessBot
             {
                 //Console.WriteLine("Do not repeat, stalement or draw");
                 board.UndoMove(possibleMoves);
-                drawMove = possibleMoves;//If there is no other good move, try priorties drawing move
+                drawMove = possibleMoves;//If there is no other good move, priorties drawing move
                 continue;
             }
             board.UndoMove(possibleMoves);
             int currentScore = (FutureAttackTotal(board, possibleMoves) /*+ MateAble(board, possibleMoves)*/ + MoveTakePower(board, possibleMoves) + WinEndGame(board, possibleMoves) - MaxDangerDetection(board, possibleMoves) - FutureDefenceTotal(board, possibleMoves));
             //Depending on result, might want to run more tests, 
-            //Console.WriteLine("Move score is :");
-            //Console.WriteLine(currentScore.ToString());
+            Console.WriteLine("Move score is :");
+            Console.WriteLine(currentScore.ToString());
             if (currentScore > score)
             {
-                //Console.WriteLine("Best move so far");
+                Console.WriteLine("Best move so far");
                 //My bot is better but does not know how to mate endgame
                 score = currentScore;
                 bestMove = possibleMoves;
@@ -239,7 +241,8 @@ public class EvilBot : IChessBot
         board.UndoMove(move);
         return AttackWatch;
     }*/
-    //Randomise list, quite useful for psudeo determinictic
+    //Randomise list, quite useful
+    //make sure the 2 random connect
     public Move[] RandomizeArray(Move[] array)
     {
         int n = array.Length;
@@ -288,8 +291,8 @@ public class EvilBot : IChessBot
             }
         }
         board.UndoMove(move);
-        //Console.WriteLine("Max danger detected");
-        //Console.WriteLine(capturedPieceValue.ToString());
+        Console.WriteLine("Max danger detected");
+        Console.WriteLine(capturedPieceValue.ToString());
         return capturedPieceValue;
     }
     /*public int MateAble(Board board, Move move)
@@ -460,10 +463,8 @@ public class EvilBot : IChessBot
         return isMoveGood;
     }
 
-
-
     //This function forces bot to always promo to queen become queen is always better than a rook bishop and knight
-    /*public int QueenPromotion(Board board, Move move)
+    /*public int PieceValue(Board board, Move move)
     {
         PieceList[] piece = board.GetAllPieceLists();
         bool goWhite = board.IsWhiteToMove;
@@ -473,7 +474,7 @@ public class EvilBot : IChessBot
         int queenCount = 0;
         foreach (PieceList pieces1 in piece)
         {
-            if ((pieces1.TypeOfPieceInList == PieceType.Queen) && (pieces1.IsWhitePieceList == goWhite))
+            if (pieces1.IsQueen && (pieces1.IsWhite == goWhite))
             {
                 queenCount--;
             }
@@ -481,17 +482,12 @@ public class EvilBot : IChessBot
         foreach (PieceList pieces2 in piece2)
         {
             //piece2
-            if ((pieces2.TypeOfPieceInList == PieceType.Queen) && (pieces2.IsWhitePieceList == goWhite))
+            if (pieces2.IsQueen && (pieces2.IsWhite == goWhite))
             {
                 queenCount++;
             }
         }
         //Return a higher number when promotioning to queen
-        Console.WriteLine("Number of queens detected");
-        if (queenCount != 1)
-        {
-            Console.WriteLine(queenCount.ToString());
-        }
         return queenCount;
     }*/
 }

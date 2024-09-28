@@ -6,7 +6,7 @@ using System.Linq;
 //using System.Diagnostics;
 
 //Bot 1001
-public class EvilBot : IChessBot
+public class Bot1003 : IChessBot
 {
     //using Bot 603
     private Random random = new Random();
@@ -67,7 +67,7 @@ public class EvilBot : IChessBot
                 continue;
             }
             board.UndoMove(possibleMoves);
-            int currentScore = (FutureAttackTotal(board, possibleMoves) /*+ MateAble(board, possibleMoves)*/ + MoveTakePower(board, possibleMoves) + WinEndGame(board, possibleMoves) - MaxDangerDetection(board, possibleMoves) - FutureDefenceTotal(board, possibleMoves));
+            int currentScore = (FutureAttackTotal(board, possibleMoves) /*+ MateAble(board, possibleMoves)*/ + MoveTakePower(board, possibleMoves) + WinEndGame(board, possibleMoves) - MaxDangerDetection(board, possibleMoves) - FutureDefenceTotal(board, possibleMoves) + QueenPromotion(board, possibleMoves));
             //Depending on result, might want to run more tests, 
             //Console.WriteLine("Move score is :");
             //Console.WriteLine(currentScore.ToString());
@@ -463,7 +463,7 @@ public class EvilBot : IChessBot
 
 
     //This function forces bot to always promo to queen become queen is always better than a rook bishop and knight
-    /*public int QueenPromotion(Board board, Move move)
+    public int QueenPromotion(Board board, Move move)
     {
         PieceList[] piece = board.GetAllPieceLists();
         bool goWhite = board.IsWhiteToMove;
@@ -471,13 +471,13 @@ public class EvilBot : IChessBot
         PieceList[] piece2 = board.GetAllPieceLists();
         board.UndoMove(move);
         int queenCount = 0;
-        foreach (PieceList pieces1 in piece)
+        /*foreach (PieceList pieces1 in piece)
         {
             if ((pieces1.TypeOfPieceInList == PieceType.Queen) && (pieces1.IsWhitePieceList == goWhite))
             {
                 queenCount--;
             }
-        }
+        }*/
         foreach (PieceList pieces2 in piece2)
         {
             //piece2
@@ -493,5 +493,5 @@ public class EvilBot : IChessBot
             Console.WriteLine(queenCount.ToString());
         }
         return queenCount;
-    }*/
+    }
 }
